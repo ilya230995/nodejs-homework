@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const Contacts = require("../../model/index");
+const Contact = require("../../model/index");
 const validate = require("./validation");
 
 router.get("/", async (_req, res, next) => {
   try {
-    const contacts = await Contacts.listContacts();
+    const contacts = await Contact.listContacts();
     return res.json({
       status: "success",
       code: 200,
@@ -20,7 +20,7 @@ router.get("/", async (_req, res, next) => {
 
 router.get("/:contactId", async (req, res, next) => {
   try {
-    const contact = await Contacts.getContactById(req.params.contactId);
+    const contact = await Contact.getContactById(req.params.contactId);
     if (contact) {
       return res.json({
         status: "success",
@@ -43,7 +43,7 @@ router.get("/:contactId", async (req, res, next) => {
 
 router.post("/", validate.createContact, async (req, res, next) => {
   try {
-    const contact = await Contacts.addContact(req.body);
+    const contact = await Contact.addContact(req.body);
     const { name, email, phone } = req.body;
     if (!name || !email || !phone) {
       return res.json({
@@ -66,7 +66,7 @@ router.post("/", validate.createContact, async (req, res, next) => {
 
 router.delete("/:contactId", async (req, res, next) => {
   try {
-    const contact = await Contacts.removeContact(req.params.contactId);
+    const contact = await Contact.removeContact(req.params.contactId);
     if (contact) {
       return res.json({
         status: "success",
@@ -90,12 +90,8 @@ router.delete("/:contactId", async (req, res, next) => {
 
 router.patch("/:contactId", validate.updateContact, async (req, res, next) => {
   try {
-    const contact = await Contacts.updateContact(
-      req.params.contactId,
-      req.body
-    );
-    const { name, email, phone } = req.body;
-    if (!(name || email || phone)) {
+    const contact = await Contact.updateContact(req.params.contactId, req.body);
+    if (JSON.stringify(req.body) === "{}") {
       return res.json({
         status: "error",
         code: 400,
