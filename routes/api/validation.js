@@ -6,7 +6,9 @@ const schemaCreateCat = Joi.object({
   phone: Joi.string()
     .pattern(/^\+?3?8?(0\d{9})$/)
     .required(),
-});
+  password: Joi.string().min(6).required(),
+  subscription: Joi.string().required(),
+}).min(1);
 
 const schemaUpdateCat = Joi.object({
   name: Joi.string().min(3).max(30).optional(),
@@ -19,7 +21,9 @@ const schemaUpdateCat = Joi.object({
   phone: Joi.string()
     .pattern(/^\+?3?8?(0\d{9})$/)
     .optional(),
-});
+  password: Joi.string().min(6).optional(),
+  subscription: Joi.string().optional(),
+}).min(1);
 
 const validate = (schema, obj, next) => {
   const { error } = schema.validate(obj);

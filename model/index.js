@@ -1,16 +1,9 @@
-const fs = require("fs").promises;
-const path = require("path");
-const { customAlphabet } = require("nanoid");
-
-const contactPath = path.join(__dirname, "./contacts.json");
-
-const nanoid = customAlphabet("1234567890", 3);
+const Contact = require("./schemas/contactsSchemas");
 
 const listContacts = async () => {
   try {
-    const data = await fs.readFile(contactPath);
-    const parsedData = JSON.parse(data);
-    return parsedData;
+    const result = await Contact.find({});
+    return result;
   } catch (error) {
     console.log(error);
   }
@@ -18,12 +11,8 @@ const listContacts = async () => {
 
 const getContactById = async (contactId) => {
   try {
-    const data = await fs.readFile(contactPath);
-    const parsedData = JSON.parse(data);
-    const contactById = parsedData.find(
-      (contact) => contact.id.toString() === contactId
-    );
-    return contactById;
+    const result = await Contact.find({ _id: contactId });
+    return result;
   } catch (error) {
     console.log(error);
   }
@@ -31,35 +20,16 @@ const getContactById = async (contactId) => {
 
 const removeContact = async (contactId) => {
   try {
-    const data = await fs.readFile(contactPath);
-    const parsedData = JSON.parse(data.toString());
-
-    const deletedContact = parsedData.find(
-      (contact) => contact.id.toString() === contactId
-    );
-
-    const filterById = parsedData.filter(
-      (contact) => contact.id.toString() !== contactId
-    );
-
-    await fs.writeFile(contactPath, JSON.stringify(filterById));
-
-    return deletedContact;
+    const result = await Contact.findByIdAndRemove({ _id: contactId });
+    return result;
   } catch (error) {
     console.log(error);
   }
 };
-
 const addContact = async (body) => {
   try {
-    const data = await fs.readFile(contactPath);
-    const parsedData = JSON.parse(data);
-
-    const contact = { id: Number(nanoid()), ...body };
-    parsedData.push(contact);
-
-    await fs.writeFile(contactPath, JSON.stringify(parsedData));
-    return contact;
+    const result = await Contact.create(body);
+    return result;
   } catch (error) {
     console.log(error);
   }
@@ -67,20 +37,12 @@ const addContact = async (body) => {
 
 const updateContact = async (contactId, body) => {
   try {
-    const data = await fs.readFile(contactPath);
-    const parsedData = JSON.parse(data);
-
-    const contactById = parsedData.find(
-      (contact) => contact.id.toString() === contactId
+    const result = await Contact.findByIdAndUpdate(
+      { _id: contactId },
+      { ...body },
+      { new: true }
     );
-    const updatedContact = { ...contactById, ...body };
-
-    const filterById = parsedData.filter(
-      (contact) => contact.id.toString() !== contactId
-    );
-    const newContactList = [updatedContact, ...filterById];
-    await fs.writeFile(contactPath, JSON.stringify(newContactList));
-    return contactById;
+    return result;
   } catch (error) {
     console.log(error);
   }
