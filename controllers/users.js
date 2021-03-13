@@ -65,8 +65,37 @@ const logout = async (req, res, next) => {
   await Users.updateToken(id, null);
   return res.status(httpCode.NO_CONTENT).json({});
 };
+
+const getUsersData = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(httpCode.UNAUTHORIZED).json({
+        status: "error",
+        code: httpCode.UNAUTHORIZED,
+        data: "UNAUTHORIZED",
+        message: "Not authorized",
+      });
+    }
+    return res.status(httpCode.OK).json({
+      status: "succes",
+      code: httpCode.OK,
+      data: {
+        user: {
+          email: user.email,
+          subscription: user.subscription,
+        },
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
 module.exports = {
   reg,
   login,
   logout,
+  getUsersData,
 };
