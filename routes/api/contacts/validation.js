@@ -1,16 +1,14 @@
 const Joi = require("joi");
 
-const schemaCreateCat = Joi.object({
+const schemaCreateContact = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   phone: Joi.string()
     .pattern(/^\+?3?8?(0\d{9})$/)
     .required(),
-  password: Joi.string().min(6).required(),
-  subscription: Joi.string().required(),
 }).min(1);
 
-const schemaUpdateCat = Joi.object({
+const schemaUpdateContact = Joi.object({
   name: Joi.string().min(3).max(30).optional(),
   email: Joi.string()
     .email({
@@ -21,7 +19,6 @@ const schemaUpdateCat = Joi.object({
   phone: Joi.string()
     .pattern(/^\+?3?8?(0\d{9})$/)
     .optional(),
-  password: Joi.string().min(6).optional(),
   subscription: Joi.string().optional(),
 }).min(1);
 
@@ -38,8 +35,8 @@ const validate = (schema, obj, next) => {
 };
 
 module.exports.createContact = (req, res, next) => {
-  return validate(schemaCreateCat, req.body, next);
+  return validate(schemaCreateContact, req.body, next);
 };
 module.exports.updateContact = (req, res, next) => {
-  return validate(schemaUpdateCat, req.body, next);
+  return validate(schemaUpdateContact, req.body, next);
 };
