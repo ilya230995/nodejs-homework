@@ -8,6 +8,8 @@ const usersRouter = require("./routes/api/users/index");
 
 const app = express();
 
+app.use(express.static("public"));
+
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
 app.use(logger(formatsLogger));

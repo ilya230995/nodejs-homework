@@ -2,11 +2,17 @@ const express = require("express");
 const router = express.Router();
 const usersController = require("../../../controllers/users");
 const guard = require("../../../helpers/guard");
-// const validate = require("./validation");
+const upload = require("../../../helpers/upload");
+const validate = require("./validation");
 
-router.post("/auth/register", usersController.reg);
-router.post("/auth/login", usersController.login);
+router.post("/auth/register", validate.createUser, usersController.reg);
+router.post("/auth/login", validate.loginUser, usersController.login);
 router.post("/auth/logout", guard, usersController.logout);
 router.get("/current", guard, usersController.getUsersData);
+router.patch(
+  "/avatars",
+  [guard, upload.single("avatar"), validate.uploadAvatar],
+  usersController.avatars
+);
 
 module.exports = router;
