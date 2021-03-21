@@ -1,5 +1,9 @@
 const jwt = require("jsonwebtoken");
 const Users = require("../model/users");
+const path = require("path");
+const Jimp = require("jimp");
+const fs = require("fs").promises;
+const createFolderExist = require("../helpers/create-dir");
 const { httpCode } = require("../helpers/constant");
 require("dotenv").config();
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -25,6 +29,7 @@ const reg = async (req, res, next) => {
           email: newUser.email,
           name: newUser.name,
           subscription: newUser.subscription,
+          avatar: newUser.avatarURL,
         },
       },
     });
@@ -93,9 +98,47 @@ const getUsersData = async (req, res, next) => {
   }
 };
 
+const avatars = async (req, res, next) => {
+  try {
+    const id = req.user.id;
+    const avatarURL = await saveAvatarToStatic(req);
+    await Users.updateAvatar(id, avatarURL);
+    return res.json({
+      status: "succes",
+      code: httpCode.OK,
+      data: {
+        avatarURL,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+const saveAvatarToStatic = async (req) => {
+  const id = req.user.id;
+  const AVATARS = process.env.AVATARS;
+  const pathFile = req.file.path;
+  const newNameAvatar = `${Date.now()}-${req.file.originalname}`;
+  const img = await Jimp.read(pathFile);
+  await img
+    .autocrop()
+    .cover(250, 250, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE)
+    .writeAsync(pathFile);
+  await createFolderExist(path.join(AVATARS, id));
+  await fs.rename(pathFile, path.join(AVATARS, id, newNameAvatar));
+  const avatarURL = path.normalize(path.join(id, newNameAvatar));
+  try {
+    await fs.unlink(path.join(process.cwd(), AVATARS, req.user.avatarURL));
+  } catch (error) {
+    console.log(error.message);
+  }
+  return avatarURL;
+};
+
 module.exports = {
   reg,
   login,
   logout,
   getUsersData,
+  avatars,
 };
