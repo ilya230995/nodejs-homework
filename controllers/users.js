@@ -4,13 +4,15 @@ const path = require("path");
 const Jimp = require("jimp");
 const fs = require("fs").promises;
 const createFolderExist = require("../helpers/create-dir");
+const { nanoid } = require("nanoid");
 const { httpCode } = require("../helpers/constant");
+const EmailServices = require("../services/email");
 require("dotenv").config();
 const SECRET_KEY = process.env.JWT_SECRET;
 
 const reg = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, name } = req.body;
     const user = await Users.findByEmail(email);
     if (user) {
       return res.status(httpCode.CONFLICT).json({
@@ -20,7 +22,13 @@ const reg = async (req, res, next) => {
         message: "Email in use",
       });
     }
-    const newUser = await Users.create(req.body);
+    const verifyToken = nanoid();
+    const emailService = new EmailServices(process.env.NODE_ENV);
+    await emailService.sendEmail(verifyToken, email, name);
+    const newUser = await Users.create({
+      ...req.body,
+      verifyToken,
+    });
     return res.status(httpCode.CREATED).json({
       status: "succes",
       code: httpCode.CREATED,
@@ -42,7 +50,7 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await Users.findByEmail(email);
-    if (!user || !user.validPassword(password)) {
+    if (!user || !user.validPassword(password) || user.verifyToken) {
       return res.status(httpCode.UNAUTHORIZED).json({
         status: "error",
         code: httpCode.UNAUTHORIZED,
@@ -135,10 +143,33 @@ const saveAvatarToStatic = async (req) => {
   return avatarURL;
 };
 
+const verify = async (req, res, next) => {
+  try {
+    const user = await Users.findByVerifyToken(req.params.verificationToken);
+    if (user) {
+      await Users.updateVerifyToken(user.id, null);
+      return res.json({
+        status: "succes",
+        code: httpCode.OK,
+        message: "Verification succesful",
+      });
+    }
+    return res.status(httpCode.BAD_REQUEST).json({
+      status: "error",
+      code: httpCode.BAD_REQUEST,
+      data: "Not found",
+      message: "User not found",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   reg,
   login,
   logout,
   getUsersData,
   avatars,
+  verify,
 };
